@@ -1,0 +1,13 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\src",
+    "\\src\\config",
+    "\\src\\controllers",
+    "\\src\\models",
+    "\\src\\routes",
+    "\\src\\services"
+  ],
+  "SelectedNode": "\\src\\config\\ database.ts",
+  "PreviewInSolutionExplorer": false
+}
