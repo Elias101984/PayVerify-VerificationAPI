@@ -80,18 +80,16 @@ export async function verifyMerchant(
 // PUBLIC VERIFICATION
 //
 // Used by:
-//
 // • Banks
 // • Payment Gateways
 // • Trust Center
 // • Public Sandbox
 //
-// Searches by:
+// MVP:
+// Searches by accountNumber.
 //
-// bankCode + accountNumber
-//
-// For MVP:
-// If bank_code is NULL we fall back to account_number only.
+// bankCode remains part of the API request contract for future use,
+// but the current merchants table does not contain a bank_code column.
 // =============================================================================
 
 interface VerifyAccountRequest {
@@ -107,57 +105,41 @@ export async function verifyAccount(
 ) {
 
     const {
-
         bankCode,
-
         accountNumber
-
     } = payload;
 
     // -------------------------------------------------------------
-    // Search Strategy
+    // MVP Search Strategy
     // -------------------------------------------------------------
-    // Phase 1
+    // The current merchants table contains:
     //
-    // If bankCode supplied:
-    //      account_number + bank_code
+    //   account_number
+    //   bank_name
     //
-    // Otherwise:
-    //      account_number only
+    // but does NOT contain:
+    //
+    //   bank_code
+    //
+    // Therefore we search by account_number only.
+    //
+    // bankCode is retained in the API contract for future schema support.
     // -------------------------------------------------------------
 
-    let merchant;
+    console.log("Account verification request:", {
+        bankCode,
+        accountNumber
+    });
 
-    if (bankCode) {
+    const merchant = await Merchant.findOne({
 
-        merchant = await Merchant.findOne({
+        where: {
 
-            where: {
+            account_number: accountNumber
 
-                account_number: accountNumber,
+        }
 
-                bank_code: bankCode
-
-            }
-
-        });
-
-    }
-
-    // Fallback (supports existing merchants that don't yet have bank_code)
-    if (!merchant) {
-
-        merchant = await Merchant.findOne({
-
-            where: {
-
-                account_number: accountNumber
-
-            }
-
-        });
-
-    }
+    });
 
     if (!merchant) {
 
@@ -208,7 +190,7 @@ export async function verifyAccount(
         accountNumberMasked:
             "******" +
             String(
-                merchant.get("account_number")
+                merchant.get("account_number") ?? ""
             ).slice(-4),
 
         trustScore:
